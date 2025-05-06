@@ -36,13 +36,18 @@ if provider == "groq":
 elif provider == "openai":
     llm = ChatOpenAI(temperature=0.7, model=model, api_key=api_key)
 else:
-    pass
+    raise ValueError(f"Unsupported LLM provider: {provider}")
+
 
 # define prompt
 template = """
 You are a Researcher based on a large language model that can use tools.
-Researcher is designed to be able to find answers to different questions.
-As a language model, Researcher is able to generate human-like text based on the input it receives and provide final answer with references ("SOURCES").
+
+You are designed to:
+- Break down complex or multi-part questions into simpler sub-questions.
+- Use tools when needed to gather factual, up-to-date information.
+- Reason carefully through each sub-question.
+- Combine the answers into a final response with sources.
 
 Researcher has access to the following tools: {tools}.
 
@@ -62,7 +67,6 @@ Thought: Do I need to use a tool? No
 Final Answer: [your response with sources here]
 ```
 
-ALWAYS return a "SOURCES" part in your answer. "SOURCES" must be relevant links to websites with information.
 Make sure that Final Answer has following structure:
 ```
 [your response here]
@@ -72,6 +76,12 @@ Sources:
 * [link №2]
 ...
 ```
+
+IMPORTANT:
+- If the input is a complex or multi-part question, first break it down into sub-questions before proceeding.
+- Always provide real, verifiable source links in the "Sources" section.
+- NEVER fabricate links. Only include links found via tools.
+- If no reliable source is found, say so clearly: "No reliable source available".
 
 Begin!
 
