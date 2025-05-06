@@ -1,6 +1,6 @@
 # research_copilot
 
-# Usage
+# Installation
 Clone repository with code
 ```
 git clone https://github.com/hannusia/research_copilot.git
@@ -13,11 +13,16 @@ python -m venv env
 . ./env/bin/activate
 pip install -r requirements.txt
 ```
-Set Groq API key as environment variable
-```
-export Groq_API_KEY="your key" 
-```
 
+# Configuration
+Before running the program, you need to configure the language model and agent settings.
+To do this edit `config.ini` file:
+* select model provider: `openai` or `groq`
+* select model (e.g., `gpt-4.1-mini`, `llama3-8b-8192`, etc.)
+* add your API key for the selected provider
+* set `verbose` to `True` if you want to see detailed agent output
+
+# Usage
 Run command-line python program with your question
 ```
 python research_copilot.py "query"
