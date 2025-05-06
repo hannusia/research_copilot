@@ -14,6 +14,7 @@ config.read("config.ini")
 provider = config.get("LLM", "provider")
 model = config.get("LLM", "model")
 api_key = config.get("LLM", "api_key")
+verbose = config.get("Agent", "verbose")
 
 # define search tool
 search = DuckDuckGoSearchResults()
@@ -105,7 +106,7 @@ prompt = PromptTemplate(
 agent = create_react_agent(llm=llm, tools=tools, prompt=prompt)
 
 agent_executor = AgentExecutor.from_agent_and_tools(
-    agent=agent, tools=tools, verbose=True, handle_parsing_errors=True
+    agent=agent, tools=tools, verbose=verbose, handle_parsing_errors=True
 )
 
 
