@@ -1,29 +1,44 @@
 import os
 from dotenv import load_dotenv
 import argparse
+import configparser
 from langchain.agents import Tool, AgentExecutor, create_react_agent
 from langchain_community.tools import DuckDuckGoSearchResults
 from langchain_groq import ChatGroq
+from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 
-load_dotenv()
+# read config file
+config = configparser.ConfigParser()
+config.read("config.ini")
+provider = config.get("LLM", "provider")
+model = config.get("LLM", "model")
+api_key = config.get("LLM", "api_key")
 
+# define search tool
 search = DuckDuckGoSearchResults()
 
 tools = [
     Tool(
         name="duckduckgo-search",
         func=search.run,
-        description="Useful for searching information on the internet. Use this when you need to find current or factual information.",
+        description="Searches information on the internet. Use this when you need to find current or factual information.",
     )
 ]
 
-llm = ChatGroq(
-    temperature=0.7,
-    model="llama3-8b-8192",
-    api_key=os.getenv("Groq_API_KEY"),
-)
+# initialize llm model
+if provider == "groq":
+    llm = ChatGroq(
+        temperature=0.7,
+        model=model,
+        api_key=api_key,
+    )
+elif provider == "openai":
+    llm = ChatOpenAI(temperature=0.7, model=model, api_key=api_key)
+else:
+    pass
 
+# define prompt
 template = """
 You are a Researcher based on a large language model that can use tools.
 Researcher is designed to be able to find answers to different questions.
@@ -67,12 +82,16 @@ New input: {input}
 prompt = PromptTemplate(
     input_variables=["agent_scratchpad", "input"],
     partial_variables={
-        "tools": ["duckduckgo-search: Search DuckDuckGo for results.", "answer-with-sources: Use this to answer a question and provide a source link."],
+        "tools": [
+            "duckduckgo-search: Search DuckDuckGo for results.",
+            "answer-with-sources: Use this to answer a question and provide a source link.",
+        ],
         "tool_names": ["duckduckgo-search"],
     },
     template=template,
 )
 
+# create agent and agent executor
 agent = create_react_agent(llm=llm, tools=tools, prompt=prompt)
 
 agent_executor = AgentExecutor.from_agent_and_tools(
@@ -80,9 +99,9 @@ agent_executor = AgentExecutor.from_agent_and_tools(
 )
 
 
-def ask_question(query):
+def ask_question(query: str) -> str:
     """
-    Function to ask a question to the agent and get a response
+    Ask agent a question
     """
     try:
         response = agent_executor.invoke({"input": query})
@@ -91,6 +110,7 @@ def ask_question(query):
         return f"An error occurred: {str(e)}"
 
 
+# parse command line input
 parser = argparse.ArgumentParser("research_copilot")
 parser.add_argument(
     "query", help="A question you want to find the answer for.", type=str
